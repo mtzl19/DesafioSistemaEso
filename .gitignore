@@ -1,0 +1,19 @@
+# Dependências
+/node_modules
+/api/node_modules
+/client/node_modules
+
+# Arquivos de Build
+/build
+/client/build
+/dist
+/api/dist
+
+# Arquivos de Log e Sistema
+*.log
+.DS_Store
+
+# Arquivos de Ambiente
+.env
+api/.env
+client/.env
