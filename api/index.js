@@ -2,12 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./db');
 const syncCosmetics = require('./sync');
+const cosmeticsRouter = require('./routes/cosmetics');
 
 const app = express();
 const port = 3001;
 
 app.use(cors());
 app.use(express.json());
+app.use('/api/cosmetics', cosmeticsRouter);
 
 // Rota de teste
 app.get('/', async (req, res) => {
