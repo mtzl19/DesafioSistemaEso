@@ -10,5 +10,14 @@ CREATE TABLE IF NOT EXISTS cosmetics (
     price INT DEFAULT 0, -- Preço em V-Bucks
     is_new BOOLEAN DEFAULT FALSE,
     is_for_sale BOOLEAN DEFAULT FALSE,
-    added_at TIMESTAMP -- Data de adição do item
+    added_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    username VARCHAR(255) NOT NULL,
+    balance INT DEFAULT 10000, -- Saldo inicial em V-Bucks
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

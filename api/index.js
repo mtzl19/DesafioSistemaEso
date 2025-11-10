@@ -3,13 +3,19 @@ const cors = require('cors');
 const db = require('./db');
 const syncCosmetics = require('./sync');
 const cosmeticsRouter = require('./routes/cosmetics');
+const authRouter = require('./routes/auth');
 
 const app = express();
 const port = 3001;
 
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use('/api/cosmetics', cosmeticsRouter);
+app.use('/api/auth', authRouter);
 
 // Rota de teste
 app.get('/', async (req, res) => {
