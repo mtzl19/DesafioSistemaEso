@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Open+Sans:wght@400;600;700&display=swap');
+
+:root {
+  --bg-main: #0a1426;      /* Azul bem escuro do fundo */
+  --bg-secondary: #13223d; /* Azul um pouco mais claro para elementos */
+  --text-primary: #ffffff; /* Texto branco principal */
+  --accent-blue: #0078ff;  /* Azul vibrante dos botões */
+  --accent-yellow: #ffe600; /* Amarelo Fortnite para destaques */
+}
+
+body {
+  margin: 0;
+  font-family: 'Open Sans', sans-serif; /* Fonte padrão para textos gerais */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+}
+
+/* Títulos com a fonte estilo Fortnite */
+h1, h2, h3, button {
+  font-family: 'Anton', sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Reset básico para inputs e selects ficarem bonitos no tema escuro */
+input, select {
+  font-family: 'Open Sans', sans-serif;
+  background-color: var(--bg-secondary) !important;
+  color: white !important;
+  border: 1px solid #2a4675 !important;
+  padding: 10px 15px !important;
+  border-radius: 8px !important;
+  outline: none;
+}
+
+input::placeholder {
+  color: #8ba0c6;
+}
+
+/* Scrollbar customizada para ficar dark */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+::-webkit-scrollbar-thumb {
+  background: #2a4675;
+  border-radius: 5px;
+}

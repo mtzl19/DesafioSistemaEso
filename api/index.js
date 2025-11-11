@@ -2,8 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./db');
 const syncCosmetics = require('./sync');
+
+// Importa as rotas
 const cosmeticsRouter = require('./routes/cosmetics');
 const authRouter = require('./routes/auth');
+const userRouter = require('./routes/user');
 
 const app = express();
 const port = 3001;
@@ -14,8 +17,11 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
+
+// Rotas
 app.use('/api/cosmetics', cosmeticsRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/user', userRouter);
 
 // Rota de teste
 app.get('/', async (req, res) => {

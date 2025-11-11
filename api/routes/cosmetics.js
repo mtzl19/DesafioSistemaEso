@@ -4,45 +4,57 @@ const db = require('../db');
 
 router.get('/', async (req, res) => {
   try {
-    // log
-    console.log('Listando cosméticos com filtros:', req.query);
-
     const limit = 20;
     const page = parseInt(req.query.page) || 1;
     const offset = (page - 1) * limit;
 
-    // Filtros opcionais
-    const { name, type, rarity } = req.query;
+    // Novos parâmetros de ordenação
+    const { name, type, rarity, forSale, isnew, sort, order } = req.query;
 
-    // Construção dinâmica da query com filtros
     let queryText = 'SELECT * FROM cosmetics WHERE 1=1';
     const queryParams = [];
     let paramCount = 1;
 
+    // --- FILTROS ---
     if (name) {
       queryText += ` AND name ILIKE $${paramCount}`;
       queryParams.push(`%${name}%`);
       paramCount++;
     }
-
     if (type) {
       queryText += ` AND type = $${paramCount}`;
       queryParams.push(type);
       paramCount++;
     }
-
     if (rarity) {
       queryText += ` AND rarity = $${paramCount}`;
       queryParams.push(rarity);
       paramCount++;
     }
-    // Query para contar o total de itens com os filtros aplicados
+    if (forSale === 'true') {
+      queryText += ` AND price > 0`;
+    }
+    if (isnew === 'true') {
+      queryText += ` AND is_new = true`;
+    }
+
+    // Conta total para paginação
     const countQueryText = queryText.replace('SELECT *', 'SELECT COUNT(*)');
     const totalResult = await db.query(countQueryText, queryParams);
     const totalItems = parseInt(totalResult.rows[0].count);
 
-    // Query final de dados
-    queryText += ` ORDER BY name ASC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
+    // --- ORDENAÇÃO ---
+    let sortColumn = 'name'; // Padrão
+    let sortDirection = 'ASC'; // Padrão
+
+    if (sort === 'date') sortColumn = 'added_at';
+    if (sort === 'rarity') sortColumn = 'rarity';
+    if (sort === 'price') sortColumn = 'price';
+    
+    if (order && order.toLowerCase() === 'desc') sortDirection = 'DESC';
+
+    // Adiciona paginação e ordenação à query
+    queryText += ` ORDER BY ${sortColumn} ${sortDirection} LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
     queryParams.push(limit, offset);
 
     const result = await db.query(queryText, queryParams);

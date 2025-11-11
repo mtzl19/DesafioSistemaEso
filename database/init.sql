@@ -21,3 +21,10 @@ CREATE TABLE IF NOT EXISTS users (
     balance INT DEFAULT 10000, -- Saldo inicial em V-Bucks
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS purchases (
+    user_id INT REFERENCES users(id),
+    cosmetic_id VARCHAR(255) REFERENCES cosmetics(id),
+    purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, cosmetic_id)
+)
