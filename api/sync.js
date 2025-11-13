@@ -6,9 +6,9 @@ const ALL_ITEMS_URL = 'https://fortnite-api.com/v2/cosmetics/br';
 const SHOP_URL = 'https://fortnite-api.com/v2/shop';
 const NEW_ITEMS_URL = 'https://fortnite-api.com/v2/cosmetics/new';
 
-
 async function syncCosmetics() {
     console.log('--- INICIANDO SINCRONIZAÇÃO COMPLETA (4 ETAPAS) ---');
+    let newHash = null; // Placeholder para futura verificação de hash
     try {
         // --- ETAPA 1: Sincronizar todos os cosméticos ---
         console.log('Etapa 1: Sincronizando lista principal de itens...');
@@ -94,7 +94,8 @@ async function syncCosmetics() {
         // --- ETAPA 4: Sincronizar ITENS NOVOS (/v2/cosmetics/new) ---
         console.log('Etapa 4: Sincronizando itens "novos"...');
         const newItemsResponse = await axios.get(NEW_ITEMS_URL);
-        
+        newHash = newItemsResponse.data.data.hashes.br; // Armazena o hash para futura verificação
+
         const itemsObject = newItemsResponse.data.data.items;
         let allNewItems = [];
 
@@ -115,9 +116,11 @@ async function syncCosmetics() {
         console.log(`Etapa 4 concluída: ${allNewItems.length} itens marcados como "novo".`);
 
         console.log('--- SINCRONIZAÇÃO COMPLETA FINALIZADA COM SUCESSO ---');
+        return newHash; // Retorna o hash para uso futuro
 
     } catch (error) {
         console.error('ERRO DURANTE A SINCRONIZAÇÃO:', error.message);
+        return null; // Retorna null em caso de erro
     }
 }
 
