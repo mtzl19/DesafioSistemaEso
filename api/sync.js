@@ -1,48 +1,123 @@
 const axios = require('axios');
 const db = require('./db');
 
-const FORTNITE_API_URL = 'https://fortnite-api.com/v2/cosmetics/br';
+// URLs Corretas
+const ALL_ITEMS_URL = 'https://fortnite-api.com/v2/cosmetics/br';
+const SHOP_URL = 'https://fortnite-api.com/v2/shop';
+const NEW_ITEMS_URL = 'https://fortnite-api.com/v2/cosmetics/new';
+
 
 async function syncCosmetics() {
-    console.log('Sincronizando cosméticos...');
+    console.log('--- INICIANDO SINCRONIZAÇÃO COMPLETA (4 ETAPAS) ---');
     try {
-        // Busca os dados da API do Fortnite
-        const response = await axios.get(FORTNITE_API_URL);
-        const cosmetics = response.data.data;
+        // --- ETAPA 1: Sincronizar todos os cosméticos ---
+        console.log('Etapa 1: Sincronizando lista principal de itens...');
+        const allItemsResponse = await axios.get(ALL_ITEMS_URL);
+        const allItems = allItemsResponse.data.data;
 
-        console.log(`Encontrados ${cosmetics.length} cosméticos. Atualizando o banco de dados...`);
-
-        // Itera sobre cada item e insere no banco de dados
-        for (const item of cosmetics) {
+        for (const item of allItems) {
             await db.query(
                 `INSERT INTO cosmetics (id, name, description, type, rarity, set_text, introduction_text, image_url, added_at)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-                ON CONFLICT (id) DO UPDATE SET
-                    name = EXCLUDED.name,
-                    description = EXCLUDED.description,
-                    type = EXCLUDED.type,
-                    rarity = EXCLUDED.rarity,
-                    set_text = EXCLUDED.set_text,
-                    introduction_text = EXCLUDED.introduction_text,
-                    image_url = EXCLUDED.image_url,
-                    added_at = EXCLUDED.added_at`,
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                 ON CONFLICT (id) DO UPDATE SET
+                    name = EXCLUDED.name, description = EXCLUDED.description, type = EXCLUDED.type,
+                    rarity = EXCLUDED.rarity, set_text = EXCLUDED.set_text, introduction_text = EXCLUDED.introduction_text,
+                    image_url = EXCLUDED.image_url, added_at = EXCLUDED.added_at`,
                 [
-                    item.id,
-                    item.name,
-                    item.description,
-                    item.type?.value,
-                    item.rarity?.value,
-                    item.set?.text,
-                    item.introduction?.text,
-                    item.images?.icon || item.images?.smallIcon,
+                    item.id, item.name, item.description,
+                    item.type?.value, item.rarity?.value, item.set?.text,
+                    item.introduction?.text, item.images?.icon || item.images?.smallIcon,
                     item.added,
                 ]
             );
         }
+        console.log(`Etapa 1 concluída: ${allItems.length} itens no banco.`);
 
-        console.log('Sincronização concluída com sucesso!');
+        // --- ETAPA 2: Resetar o status ---
+        console.log('Etapa 2: Resetando status da loja (preços, "novo" e "promoção")...');
+        await db.query('UPDATE cosmetics SET price = 0, regular_price = 0, is_new = false, is_for_sale = false, on_promotion = false');
+        console.log('Etapa 2 concluída.');
+
+        // --- ETAPA 3: Sincronizar a LOJA ATUAL (/v2/shop) ---
+        console.log('Etapa 3: Sincronizando preços e promoções da loja atual...');
+        const shopResponse = await axios.get(SHOP_URL);
+        
+        const shopEntries = shopResponse.data.data.entries || [];
+
+        let itemsEmLoja = 0;
+        let itemsEmPromocao = 0;
+
+        for (const entry of shopEntries) {
+            const price = entry.finalPrice;
+            if (!price) continue; // Pula se não tiver preço
+
+            // Verifica se está em promoção
+            const regularPrice = entry.regularPrice;
+            const isOnPromotion = (price < regularPrice);
+            if (isOnPromotion) itemsEmPromocao++;
+
+            // Lida com itens normais
+            if (entry.items) {
+                for (const item of entry.items) {
+                    await db.query(
+                        'UPDATE cosmetics SET price = $1, is_for_sale = true, on_promotion = $3, regular_price = $4 WHERE id = $2',
+                        [price, item.id, isOnPromotion, regularPrice]
+                    );
+                    itemsEmLoja++;
+                }
+            }
+            
+            // Lida com Músicas (Jam Tracks)
+            if (entry.tracks) {
+                for (const track of entry.tracks) {
+                    await db.query(
+                        'UPDATE cosmetics SET price = $1, is_for_sale = true, on_promotion = $3, regular_price = $4 WHERE id = $2',
+                        [price, track.id, isOnPromotion, regularPrice]
+                    );
+                    itemsEmLoja++;
+                }
+            }
+
+            // Lida com itens de Battle Royale
+            if (entry.brItems) {
+                for (const item of entry.brItems) {
+                    await db.query(
+                        'UPDATE cosmetics SET price = $1, is_for_sale = true, on_promotion = $3, regular_price = $4 WHERE id = $2',
+                        [price, item.id, isOnPromotion, regularPrice]
+                    );
+                    itemsEmLoja++;
+                }
+            }
+        }
+        console.log(`Etapa 3 concluída: ${itemsEmLoja} itens atualizados com preços.`);
+
+        // --- ETAPA 4: Sincronizar ITENS NOVOS (/v2/cosmetics/new) ---
+        console.log('Etapa 4: Sincronizando itens "novos"...');
+        const newItemsResponse = await axios.get(NEW_ITEMS_URL);
+        
+        const itemsObject = newItemsResponse.data.data.items;
+        let allNewItems = [];
+
+        if (itemsObject) {
+            const brItems = itemsObject.br || [];
+            const trackItems = itemsObject.tracks || [];
+            const legoItems = itemsObject.lego || [];
+            
+            allNewItems = [...brItems, ...trackItems, ...legoItems];
+        }
+        
+        for (const item of allNewItems) {
+            await db.query(
+                'UPDATE cosmetics SET is_new = true WHERE id = $1',
+                [item.id]
+            );
+        }
+        console.log(`Etapa 4 concluída: ${allNewItems.length} itens marcados como "novo".`);
+
+        console.log('--- SINCRONIZAÇÃO COMPLETA FINALIZADA COM SUCESSO ---');
+
     } catch (error) {
-        console.error('Erro durante a sincronização:', error);
+        console.error('ERRO DURANTE A SINCRONIZAÇÃO:', error.message);
     }
 }
 

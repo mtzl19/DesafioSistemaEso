@@ -8,9 +8,11 @@ CREATE TABLE IF NOT EXISTS cosmetics (
     introduction_text VARCHAR(255),
     image_url TEXT,
     price INT DEFAULT 0, -- Preço em V-Bucks
+    regular_price INT DEFAULT 0, -- Preço regular
     is_new BOOLEAN DEFAULT FALSE,
     is_for_sale BOOLEAN DEFAULT FALSE,
-    added_at TIMESTAMP
+    added_at TIMESTAMP,
+    on_promotion BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS users (
@@ -26,5 +28,6 @@ CREATE TABLE IF NOT EXISTS purchases (
     user_id INT REFERENCES users(id),
     cosmetic_id VARCHAR(255) REFERENCES cosmetics(id),
     purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    price_paid INT NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id, cosmetic_id)
 )

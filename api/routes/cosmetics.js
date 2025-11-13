@@ -8,8 +8,8 @@ router.get('/', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const offset = (page - 1) * limit;
 
-    // Novos parâmetros de ordenação
-    const { name, type, rarity, forSale, isnew, sort, order } = req.query;
+    // --- PARÂMETROS DE FILTRO E ORDENAÇÃO ---
+    const { name, type, rarity, forSale, isnew, sort, order, startDate, endDate, onPromotion } = req.query;
 
     let queryText = 'SELECT * FROM cosmetics WHERE 1=1';
     const queryParams = [];
@@ -36,6 +36,19 @@ router.get('/', async (req, res) => {
     }
     if (isnew === 'true') {
       queryText += ` AND is_new = true`;
+    }
+    if (startDate) {
+      queryText += ` AND added_at::date >= $${paramCount}`;
+      queryParams.push(startDate);
+      paramCount++;
+    }
+    if (endDate) {
+      queryText += ` AND added_at::date <= $${paramCount}`;
+      queryParams.push(endDate);
+      paramCount++;
+    }
+    if (onPromotion === 'true') {
+      queryText += ` AND on_promotion = true`;
     }
 
     // Conta total para paginação

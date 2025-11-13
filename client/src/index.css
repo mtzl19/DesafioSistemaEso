@@ -1,11 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Anton&family=Open+Sans:wght@400;600;700&display=swap');
 
 :root {
-  --bg-main: #0a1426;      /* Azul bem escuro do fundo */
-  --bg-secondary: #13223d; /* Azul um pouco mais claro para elementos */
+  --bg-main: #0a1426;      /* Azul escuro do fundo */
+  --bg-secondary: #13223d; /* Azul claro para elementos */
   --text-primary: #ffffff; /* Texto branco principal */
-  --accent-blue: #0078ff;  /* Azul vibrante dos botões */
-  --accent-yellow: #ffe600; /* Amarelo Fortnite para destaques */
+  --accent-blue: #0078ff;  /* Azul forte dos botões */
+  --accent-yellow: #ffe600; /* Amarelo para destaques */
 }
 
 body {
@@ -24,7 +24,7 @@ h1, h2, h3, button {
   text-transform: uppercase;
 }
 
-/* Reset básico para inputs e selects ficarem bonitos no tema escuro */
+/* Reset básico para inputs e selects */
 input, select {
   font-family: 'Open Sans', sans-serif;
   background-color: var(--bg-secondary) !important;
@@ -39,7 +39,7 @@ input::placeholder {
   color: #8ba0c6;
 }
 
-/* Scrollbar customizada para ficar dark */
+/* Scrollbar dark */
 ::-webkit-scrollbar {
   width: 10px;
 }

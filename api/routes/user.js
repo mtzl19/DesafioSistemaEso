@@ -19,12 +19,13 @@ router.post('/purchase/:cosmeticId', authMiddleware, async (req, res) => {
             return res.status(404).json({ error: 'Item não encontrado.' });
         }
         const item = itemResult.rows[0];
+        const itemPrice = item.price; // Guarda o preço do item
 
         // 2. Verificar saldo do usuário
         const userResult = await db.query('SELECT balance FROM users WHERE id = $1', [userId]);
         const userBalance = userResult.rows[0].balance;
 
-        if (userBalance < item.price) {
+        if (userBalance < itemPrice) {
             await db.query('ROLLBACK');
             return res.status(400).json({ error: 'Saldo insuficiente.' });
         }
@@ -36,9 +37,14 @@ router.post('/purchase/:cosmeticId', authMiddleware, async (req, res) => {
              return res.status(400).json({ error: 'Você já possui este item.' });
         }
 
-        // 4. Realizar a compra (Descontar saldo e Adicionar item)
-        await db.query('UPDATE users SET balance = balance - $1 WHERE id = $2', [item.price, userId]);
-        await db.query('INSERT INTO purchases (user_id, cosmetic_id) VALUES ($1, $2)', [userId, cosmeticId]);
+        // 4. Realizar a compra e deduzir saldo
+        await db.query('UPDATE users SET balance = balance - $1 WHERE id = $2', [itemPrice, userId]);
+        
+        // 5. Adicionar item à tabela de compras
+        await db.query(
+            'INSERT INTO purchases (user_id, cosmetic_id, price_paid) VALUES ($1, $2, $3)', 
+            [userId, cosmeticId, itemPrice]
+        );
 
         // FINALIZA A TRANSAÇÃO
         await db.query('COMMIT');
@@ -59,15 +65,67 @@ router.post('/purchase/:cosmeticId', authMiddleware, async (req, res) => {
     }
 });
 
+// Rota para devolver (refund) um cosmético
+router.post('/refund/:cosmeticId', authMiddleware, async (req, res) => {
+    const { userId } = req;
+    const { cosmeticId } = req.params;
+
+    try {
+        await db.query('BEGIN');
+
+        // 1. Encontrar a compra e o valor que foi pago
+        const purchaseResult = await db.query(
+            'SELECT price_paid FROM purchases WHERE user_id = $1 AND cosmetic_id = $2',
+            [userId, cosmeticId]
+        );
+
+        if (purchaseResult.rows.length === 0) {
+            await db.query('ROLLBACK');
+            return res.status(404).json({ error: 'Você não possui este item para devolver.' });
+        }
+
+        const refundAmount = purchaseResult.rows[0].price_paid;
+
+        // 2. Remover o item da tabela de compras
+        await db.query(
+            'DELETE FROM purchases WHERE user_id = $1 AND cosmetic_id = $2',
+            [userId, cosmeticId]
+        );
+
+        // 3. Devolver o saldo (V-Bucks) para o usuário
+        const userResult = await db.query(
+            'UPDATE users SET balance = balance + $1 WHERE id = $2 RETURNING balance',
+            [refundAmount, userId]
+        );
+
+        const newBalance = userResult.rows[0].balance;
+
+        // 4. Confirmar a transação
+        await db.query('COMMIT');
+
+        // 5. Enviar a resposta que o frontend espera
+        res.status(200).json({
+            newBalance: newBalance,
+            refundAmount: refundAmount
+        });
+
+    } catch (error) {
+        await db.query('ROLLBACK');
+        console.error('Erro na devolução:', error);
+        res.status(500).json({ error: 'Erro ao processar devolução.' });
+    }
+});
+
+
 // Rota para listar os itens comprados pelo usuário
 router.get('/my-items', authMiddleware, async (req, res) => {
     try {
         const result = await db.query(`
-            SELECT c.*, uc.purchased_at
+            SELECT c.*, uc.purchase_date, uc.price_paid
             FROM cosmetics c
             INNER JOIN purchases uc ON c.id = uc.cosmetic_id
             WHERE uc.user_id = $1
-            ORDER BY uc.purchased_at DESC
+            ORDER BY uc.purchase_date DESC
         `, [req.userId]);
 
         res.json(result.rows);
@@ -84,12 +142,38 @@ router.get('/purchased-ids', authMiddleware, async (req, res) => {
             'SELECT cosmetic_id FROM purchases WHERE user_id = $1',
             [req.userId]
         );
-        // Retorna um array simples de IDs: ['id1', 'id2', 'id3']
         const ids = result.rows.map(row => row.cosmetic_id);
         res.json(ids);
     } catch (error) {
         console.error('Erro ao buscar IDs comprados:', error);
         res.status(500).json({ error: 'Erro no servidor' });
+    }
+});
+
+// Rota para recarregar V-Bucks
+router.post('/recharge', authMiddleware, async (req, res) => {
+    const { userId } = req;
+    const { amount } = req.body; 
+
+    if (!amount || amount <= 0 || typeof amount !== 'number') {
+        return res.status(400).json({ error: 'Valor de recarga inválido.' });
+    }
+
+    try {
+        const result = await db.query(
+            'UPDATE users SET balance = balance + $1 WHERE id = $2 RETURNING balance',
+            [amount, userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Usuário não encontrado.' });
+        }
+        
+        res.json({ newBalance: result.rows[0].balance });
+
+    } catch (error) {
+        console.error('Erro na recarga:', error);
+        res.status(500).json({ error: 'Erro ao processar recarga.' });
     }
 });
 
