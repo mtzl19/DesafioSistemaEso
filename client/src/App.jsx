@@ -111,7 +111,7 @@ function App() {
                 fetchOptions.headers['Authorization'] = `Bearer ${token}`;
             }
 
-            const response = await fetch(`http://localhost:3001/api/cosmetics?${params.toString()}`, fetchOptions);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/cosmetics?${params.toString()}`, fetchOptions);
             const data = await response.json();
             if (pageToFetch === 1 || resetList) {
                 setCosmetics(data.data);
@@ -129,7 +129,7 @@ function App() {
     const fetchMyPurchasesData = async (token) => {
         if (!token) return;
         try {
-            const response = await fetch('http://localhost:3001/api/user/my-items', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/user/my-items`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
@@ -143,7 +143,7 @@ function App() {
     const fetchHistory = async () => {
         try {
             const token = localStorage.getItem('token');
-            const historyResponse = await fetch('http://localhost:3001/api/user/history', {
+            const historyResponse = await fetch(`${import.meta.env.VITE_API_URL}/user/history`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const historyData = await historyResponse.json();
@@ -159,10 +159,10 @@ function App() {
         setLoading(true);
         try {
             if (pageToFetch === 1) {
-                const rankingResponse = await fetch('http://localhost:3001/api/user/users/ranking');
+                const rankingResponse = await fetch(`${import.meta.env.VITE_API_URL}/user/users/ranking`);
                 if (rankingResponse.ok) setRankingPodium(await rankingResponse.json());
             }
-            const usersResponse = await fetch(`http://localhost:3001/api/user/users?page=${pageToFetch}`);
+            const usersResponse = await fetch(`${import.meta.env.VITE_API_URL}/user/users?page=${pageToFetch}`);
             if (usersResponse.ok) {
                 const data = await usersResponse.json();
                 setPublicUsers({ list: data.users, totalPages: data.totalPages });
@@ -305,7 +305,7 @@ function App() {
         setHistory([]);
 
         try {
-            const response = await fetch(`http://localhost:3001/api/user/users/profile/${username}`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/user/users/profile/${username}`);
             if (response.ok) {
                 setProfileData(await response.json());
             } else {
@@ -360,7 +360,7 @@ function App() {
         setBundleModalLoading(true);
         try {
             const encodedBundleId = encodeURIComponent(bundleId);
-            const response = await fetch(`http://localhost:3001/api/cosmetics/bundle/${encodedBundleId}`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/cosmetics/bundle/${encodedBundleId}`);
             if (response.ok) {
                 const bundleResponse = await response.json();
                 const itemsArray = bundleResponse.data;
@@ -437,7 +437,7 @@ function App() {
         if (!itemToBuy) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3001/api/user/purchase/${itemToBuy.id}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/user/purchase/${itemToBuy.id}`, {
                 method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
             const data = await response.json();
@@ -468,7 +468,7 @@ function App() {
         if (!user) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:3001/api/user/recharge', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/user/recharge`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ amount })
@@ -489,7 +489,7 @@ function App() {
         if (!itemToRefund || !user) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3001/api/user/refund/${itemToRefund.id}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/user/refund/${itemToRefund.id}`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });

@@ -67,7 +67,7 @@ O sistema permite que usuários se cadastrem, gerenciem seu saldo de V-Bucks, co
 
 ---
 
-## 🚀 Rodando o Projeto com Docker
+## 🚀 Rodando o Projeto localmente com Docker
 
 Este método constrói e executa o frontend, o backend e o banco de dados automaticamente, sendo a forma mais simples de executar a aplicação.
 
@@ -86,3 +86,14 @@ docker-compose up --build
 ```
 
 A aplicação estará disponível em `http://localhost:5173`.
+
+## 🖥️ Demo Ao Vivo
+
+A aplicação está hospedada gratuitamente no Render e pode ser acessada pelos links abaixo.
+
+* **Site (Frontend):** **[https://vshop-client.onrender.com](https://vshop-client.onrender.com)**
+* **API (Backend):** **[https://vshop-api.onrender.com](https://vshop-api.onrender.com)**
+
+> **Nota:** Por ser um plano gratuito, a API pode demorar alguns segundos para "acordar" no primeiro acesso se estiver inativa.
+
+---

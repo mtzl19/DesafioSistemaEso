@@ -38,7 +38,7 @@ function EditProfile({ currentUser, onProfileUpdate }) {
         // 3. Envia para a API
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:3001/api/user/profile', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/user/profile`, {
                 method: 'PATCH',
                 headers: { 
                     'Content-Type': 'application/json',
