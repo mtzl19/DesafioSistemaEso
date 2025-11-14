@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS cosmetics (
     is_new BOOLEAN DEFAULT FALSE,
     is_for_sale BOOLEAN DEFAULT FALSE,
     added_at TIMESTAMP,
-    on_promotion BOOLEAN DEFAULT FALSE
+    on_promotion BOOLEAN DEFAULT FALSE,
+    bundle_id VARCHAR(255) NULL
 );
 
 CREATE TABLE IF NOT EXISTS users (
@@ -30,4 +31,13 @@ CREATE TABLE IF NOT EXISTS purchases (
     purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     price_paid INT NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id, cosmetic_id)
-)
+);
+
+CREATE TABLE IF NOT EXISTS transaction_history (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id),
+    cosmetic_id VARCHAR(255) REFERENCES cosmetics(id),
+    transaction_type VARCHAR(1) NOT NULL, -- 'c' pra compra e 'v' pra venda
+    amount INT NOT NULL, -- O valor da transação (positivo para refund, negativo para purchase)
+    transaction_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);

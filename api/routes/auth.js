@@ -11,9 +11,20 @@ const JWT_SECRET = 'chave_secreta';
 router.post('/register', async (req, res) => {
     const { email, password, username } = req.body;
 
-    // Validação básica
+    // Bloco de validação
     if (!email || !password || !username) {
         return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+    }
+    if (username.length < 5) {
+        return res.status(400).json({ error: 'O nome de usuário deve ter pelo menos 5 caracteres.'})
+    }
+    if (password.length < 6) {
+        return res.status(400).json({ error: 'A senha deve ter pelo menos 6 caracteres.'})
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Favor inserir um email válido.'})
     }
 
     try {

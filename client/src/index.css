@@ -17,7 +17,7 @@ body {
   color: var(--text-primary);
 }
 
-/* Títulos com a fonte estilo Fortnite */
+/* Títulos estilo Fortnite */
 h1, h2, h3, button {
   font-family: 'Anton', sans-serif;
   letter-spacing: 1px;

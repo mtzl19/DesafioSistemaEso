@@ -54,7 +54,7 @@ async function checkForUpdates() {
             console.log(`---[SISTEMA]--- Sincronização inicial concluída. Hash atual: ${currentApiHash}`);
         }
 
-        // Inicia o "agendador" (Intervalo) SÓ DEPOIS que o primeiro sync acabar
+        // Inicia o "agendador" (Intervalo) depois que o primeiro sync acabar
         setInterval(checkForUpdates, SYNC_INTERVAL_MS);
 
     } catch (error) {

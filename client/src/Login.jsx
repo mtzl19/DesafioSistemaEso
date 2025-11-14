@@ -35,7 +35,32 @@ function Login({ onLoginSuccess, onSwitchToRegister }) {
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <input type="email" placeholder="Seu email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{fontSize: '16px'}} />
                 <input type="password" placeholder="Sua senha" value={password} onChange={(e) => setPassword(e.target.value)} required style={{fontSize: '16px'}} />
-                <button type="submit" style={{ padding: '15px', backgroundColor: '#0078ff', color: 'white', border: 'none', borderRadius: '10px', fontSize: '18px', cursor: 'pointer' }}>
+                <button
+                    type="submit"
+                    style={{
+                        padding: '18px 32px',
+                        backgroundColor: '#0078ff',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '12px',
+                        fontSize: '18px',
+                        fontWeight: '700',
+                        letterSpacing: '1.5px',
+                        lineHeight: '1.5',
+                        textTransform: 'uppercase',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        transition: 'transform 0.1s ease, box-shadow 0.1s ease',
+                    }}
+                    onMouseOver={e => {
+                        e.currentTarget.style.transform = 'scale(1.04)';
+                        e.currentTarget.style.boxShadow = '0 6px 14px rgba(0, 0, 0, 0.2)';
+                    }}
+                    onMouseOut={e => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                    }}
+                >
                     ENTRAR
                 </button>
             </form>

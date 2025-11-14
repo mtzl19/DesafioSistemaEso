@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const authOptional = require('../middleware/authOptional');
 
-router.get('/', async (req, res) => {
+router.get('/', authOptional, async (req, res) => {
   try {
     const limit = 20;
     const page = parseInt(req.query.page) || 1;
@@ -50,6 +51,20 @@ router.get('/', async (req, res) => {
     if (onPromotion === 'true') {
       queryText += ` AND on_promotion = true`;
     }
+    if (req.query.isBundle === 'true') {
+      // Considera bundle somente o que tem mais de 1 item no mesmo pacote
+      queryText += ` AND bundle_id IS NOT NULL AND EXISTS (
+          SELECT 1 
+          FROM cosmetics c2
+          WHERE c2.bundle_id = cosmetics.bundle_id 
+          AND c2.id != cosmetics.id
+      )`;
+    }
+    if (req.query.owned === 'true' && req.userId) {
+      queryText += ` AND id IN (SELECT cosmetic_id FROM purchases WHERE user_id = $${paramCount})`;
+      queryParams.push(req.userId);
+      paramCount++;
+    }
 
     // Conta total para paginação
     const countQueryText = queryText.replace('SELECT *', 'SELECT COUNT(*)');
@@ -79,6 +94,20 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao listar cosméticos:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+router.get('/bundle/:bundleId', async (req, res) => {
+  const { bundleId } = req.params;
+  try {
+    const result = await db.query(
+      'SELECT id, name, image_url, rarity, type FROM cosmetics WHERE bundle_id = $1',
+      [bundleId]
+    );
+    res.json({ data: result.rows });
+  } catch (error) {
+    console.error('Erro ao obter itens do bundle:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });

@@ -17,8 +17,8 @@ async function syncCosmetics() {
 
         for (const item of allItems) {
             await db.query(
-                `INSERT INTO cosmetics (id, name, description, type, rarity, set_text, introduction_text, image_url, added_at)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                `INSERT INTO cosmetics (id, name, description, type, rarity, set_text, introduction_text, image_url, added_at, regular_price)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0)
                  ON CONFLICT (id) DO UPDATE SET
                     name = EXCLUDED.name, description = EXCLUDED.description, type = EXCLUDED.type,
                     rarity = EXCLUDED.rarity, set_text = EXCLUDED.set_text, introduction_text = EXCLUDED.introduction_text,
@@ -34,8 +34,8 @@ async function syncCosmetics() {
         console.log(`Etapa 1 concluída: ${allItems.length} itens no banco.`);
 
         // --- ETAPA 2: Resetar o status ---
-        console.log('Etapa 2: Resetando status da loja (preços, "novo" e "promoção")...');
-        await db.query('UPDATE cosmetics SET price = 0, regular_price = 0, is_new = false, is_for_sale = false, on_promotion = false');
+        console.log('Etapa 2: Resetando status da loja (preços, novo, promoção e bundles)...');
+        await db.query('UPDATE cosmetics SET price = 0, regular_price = 0, is_new = false, is_for_sale = false, on_promotion = false, bundle_id = NULL');
         console.log('Etapa 2 concluída.');
 
         // --- ETAPA 3: Sincronizar a LOJA ATUAL (/v2/shop) ---
@@ -43,7 +43,6 @@ async function syncCosmetics() {
         const shopResponse = await axios.get(SHOP_URL);
         
         const shopEntries = shopResponse.data.data.entries || [];
-
         let itemsEmLoja = 0;
         let itemsEmPromocao = 0;
 
@@ -54,39 +53,32 @@ async function syncCosmetics() {
             // Verifica se está em promoção
             const regularPrice = entry.regularPrice;
             const isOnPromotion = (price < regularPrice);
+            
             if (isOnPromotion) itemsEmPromocao++;
 
-            // Lida com itens normais
-            if (entry.items) {
-                for (const item of entry.items) {
-                    await db.query(
-                        'UPDATE cosmetics SET price = $1, is_for_sale = true, on_promotion = $3, regular_price = $4 WHERE id = $2',
-                        [price, item.id, isOnPromotion, regularPrice]
-                    );
-                    itemsEmLoja++;
-                }
-            }
-            
-            // Lida com Músicas (Jam Tracks)
-            if (entry.tracks) {
-                for (const track of entry.tracks) {
-                    await db.query(
-                        'UPDATE cosmetics SET price = $1, is_for_sale = true, on_promotion = $3, regular_price = $4 WHERE id = $2',
-                        [price, track.id, isOnPromotion, regularPrice]
-                    );
-                    itemsEmLoja++;
-                }
-            }
+            const allItemsInEntry = [
+                ...(entry.items || []),
+                ...(entry.tracks || []),
+                ...(entry.brItems || [])
+            ];
 
-            // Lida com itens de Battle Royale
-            if (entry.brItems) {
-                for (const item of entry.brItems) {
-                    await db.query(
-                        'UPDATE cosmetics SET price = $1, is_for_sale = true, on_promotion = $3, regular_price = $4 WHERE id = $2',
-                        [price, item.id, isOnPromotion, regularPrice]
-                    );
-                    itemsEmLoja++;
-                }
+            // Verifica se é um bundle (Mais de 1 item numa entry só)
+            const isBundle = allItemsInEntry.length > 1;
+            // Define o bundle_id se for um bundle
+            const bundleId = isBundle ? entry.offerId : null;
+
+            // Atualiza cada item na entry
+            for (const item of allItemsInEntry) {
+                await db.query(
+                    `UPDATE cosmetics SET price = $1,
+                        is_for_sale = true,
+                        on_promotion = $3,
+                        regular_price = $4,
+                        bundle_id = $5
+                    WHERE id = $2`,
+                    [price, item.id, isOnPromotion, regularPrice, bundleId]
+                );
+                itemsEmLoja++;
             }
         }
         console.log(`Etapa 3 concluída: ${itemsEmLoja} itens atualizados com preços.`);
@@ -94,11 +86,11 @@ async function syncCosmetics() {
         // --- ETAPA 4: Sincronizar ITENS NOVOS (/v2/cosmetics/new) ---
         console.log('Etapa 4: Sincronizando itens "novos"...');
         const newItemsResponse = await axios.get(NEW_ITEMS_URL);
+        
         newHash = newItemsResponse.data.data.hashes.br; // Armazena o hash para futura verificação
 
         const itemsObject = newItemsResponse.data.data.items;
         let allNewItems = [];
-
         if (itemsObject) {
             const brItems = itemsObject.br || [];
             const trackItems = itemsObject.tracks || [];

@@ -8,6 +8,14 @@ function Register({ onLoginSuccess, onSwitchToLogin }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Validador do campo de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            toast.error("Por favor, insira um email válido.");
+            return;
+        }
+
         try {
             const response = await fetch('http://localhost:3001/api/auth/register', {
                 method: 'POST',
@@ -31,7 +39,30 @@ function Register({ onLoginSuccess, onSwitchToLogin }) {
                 <input type="text" placeholder="Nome de Usuário" value={username} onChange={(e) => setUsername(e.target.value)} required style={{fontSize: '16px'}} />
                 <input type="email" placeholder="Seu email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{fontSize: '16px'}} />
                 <input type="password" placeholder="Senha segura" value={password} onChange={(e) => setPassword(e.target.value)} required style={{fontSize: '16px'}} />
-                <button type="submit" style={{ padding: '15px', backgroundColor: '#ffe600', color: 'black', border: 'none', borderRadius: '10px', fontSize: '18px', cursor: 'pointer', fontWeight: 'bold' }}>
+                <button
+                    type="submit"
+                    style={{
+                        padding: '18px 32px',
+                        backgroundColor: '#ffe600',
+                        color: '#111',
+                        border: 'none',
+                        borderRadius: '12px',
+                        fontSize: '18px',
+                        lineHeight: '1.5',
+                        textTransform: 'uppercase',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        transition: 'transform 0.1s ease, box-shadow 0.1s ease',
+                    }}
+                    onMouseOver={e => {
+                        e.currentTarget.style.transform = 'scale(1.04)';
+                        e.currentTarget.style.boxShadow = '0 6px 14px rgba(0, 0, 0, 0.2)';
+                    }}
+                    onMouseOut={e => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                    }}
+                >
                     CADASTRAR E GANHAR 10.000 V-BUCKS
                 </button>
             </form>
