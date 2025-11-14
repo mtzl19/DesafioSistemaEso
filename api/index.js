@@ -8,8 +8,14 @@ const userRouter = require('./routes/user');
 const axios = require('axios');
 
 const app = express();
-app.use(cors());
 app.use(express.json());
+
+const corsOptions = {
+  origin: 'https://vshop-lolb.onrender.com',
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 
 // Rotas
 app.use('/api/auth', authRouter);
