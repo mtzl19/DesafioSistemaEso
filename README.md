@@ -69,7 +69,7 @@ O sistema permite que usuários se cadastrem, gerenciem seu saldo de V-Bucks, co
 
 ## 🚀 Rodando o Projeto com Docker
 
-Este método orquestra o frontend, o backend e o banco de dados automaticamente, sendo a forma mais simples de executar a aplicação.
+Este método constrói e executa o frontend, o backend e o banco de dados automaticamente, sendo a forma mais simples de executar a aplicação.
 
 **Pré-requisitos:**
 - Docker
@@ -85,4 +85,4 @@ cd DesafioSistemaEso
 docker-compose up --build
 ```
 
-A aplicação estará disponível em `http://localhost:5173` (ou na porta indicada pelo Vite).
+A aplicação estará disponível em `http://localhost:5173`.
