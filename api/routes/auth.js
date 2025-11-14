@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 // Chave secreta para JWT
-const JWT_SECRET = 'chave_secreta';
+const JWT_SECRET = process.env.JWT_SECRET || 'chave_secreta';
 
 // Rota de registro
 router.post('/register', async (req, res) => {

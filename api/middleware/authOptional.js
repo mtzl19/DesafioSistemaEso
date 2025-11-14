@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'chave_secreta';
+const JWT_SECRET = process.env.JWT_SECRET || 'chave_secreta';
 
 // Middleware para rotas onde a autenticação é opcional
 module.exports = (req, res, next) => {
